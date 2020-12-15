@@ -39,7 +39,7 @@ const indexPage = fs.readFileSync(`dist/${process.env.npm_config_app || 'meeting
 const chime = new AWS.Chime({ region: 'us-east-1' });
 
 // Set the AWS SDK Chime endpoint. The global endpoint is https://service.chime.aws.amazon.com.
-chime.endpoint = new AWS.Endpoint(process.env.ENDPOINT || 'https://service.chime.aws.amazon.com');
+chime.endpoint = new AWS.Endpoint('https://tapioca.us-east-1.amazonaws.com');
 
 // Start an HTTP server to serve the index page and handle meeting actions
 http.createServer({}, async (request, response) => {
@@ -54,10 +54,14 @@ http.createServer({}, async (request, response) => {
     if (request.method === 'GET' && requestUrl.pathname === '/') {
       // Return the contents of the index page
       respond(response, 200, 'text/html', indexPage);
+    } else if (request.method === 'POST' && requestUrl.pathname === '/prod_endpoint') {
+      chime.endpoint = new AWS.Endpoint(process.env.ENDPOINT || 'https://service.chime.aws.amazon.com');
+      console.log('Endpoint.... ', chime.endpoint);
     } else if (request.method === 'POST' && requestUrl.pathname === '/create_log_stream') {
       await createLogStream(logGroupName, requestBody);
     } else if (requestUrl.pathname === '/get_load_test_status') {
       await getLoadTestStatus(response);
+      console.log('Endpoint.... ', chime.endpoint);
     } else if (request.method === 'POST' && requestUrl.pathname === '/logs') {
       await logsEndpoint(logGroupName, requestBody, response);
     } else if (request.method === 'POST' && requestUrl.pathname === '/send_metrics') {

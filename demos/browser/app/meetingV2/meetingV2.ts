@@ -297,6 +297,20 @@ export class DemoMeetingApp implements
 
     if(urlParams.has('setUsingPasscode') && urlParams.has('setUsingPasscode')) {
       this.setUsingPasscode = JSON.parse(urlParams.get('setUsingPasscode'));
+      if (this.setUsingPasscode == true) {
+        new AsyncScheduler().start(async () => {
+          try {
+            const response = await fetch(`${DemoMeetingApp.BASE_URL}prod_endpoint`, {
+              method: 'POST'
+            });
+            if (response.status === 200) {
+              console.log('Chime Endpoint pointing to PROD');
+            }
+          } catch (error) {
+            console.error(error.message);
+          }
+        });
+      }
     }
 
     console.log(this.sessionMeetingId);
@@ -791,7 +805,7 @@ export class DemoMeetingApp implements
     setInterval(() => {
       console.log(this.metricReport);
       if (Object.keys(this.metricReport).length > 0) { // && timeSinceStartOfLoadTest > 5500) {
-        this.log(this.metricReport);
+        this.log(JSON.stringify(this.metricReport));
         this.sendMetrics(this.metricReport);
       }
     }, DemoMeetingApp.METRIC_FETCH_INTERVAL_MS);
@@ -1003,8 +1017,8 @@ export class DemoMeetingApp implements
       delete metricReport.availableIncomingBitrate;
       delete metricReport.nackCountReceivedPerSecond;
       delete metricReport.googNackCountReceivedPerSecond;
-      delete metricReport.videoUpstreamBitrate;
-      delete metricReport.videoPacketSentPerSecond;
+      //delete metricReport.videoUpstreamBitrate;
+      //delete metricReport.videoPacketSentPerSecond;
       delete metricReport.availableSendBandwidth;
       metricReport.outboundBandwidth = outboundBandwidth;
       metricReport.inboundBandwidth = inboundBandwidth;
@@ -1966,6 +1980,13 @@ export class DemoMeetingApp implements
       const video = document.getElementById('share-video') as HTMLVideoElement;
       video.src = DemoMeetingApp.testVideo;
       await video.play();
+      if (typeof video.loop == 'boolean') {
+        video.loop = true;
+      } else {
+        video.addEventListener('ended', async () => {
+          await video.play();
+        }, false);
+      }
       var mediaStream :  MediaStream | null;
       console.error(video);
       console.error(video.src);
